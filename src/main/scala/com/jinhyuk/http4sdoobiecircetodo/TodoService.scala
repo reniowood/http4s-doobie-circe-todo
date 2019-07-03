@@ -7,9 +7,17 @@ import org.http4s.syntax._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.blaze._
+import org.http4s.EntityDecoder
+import org.http4s.MediaType
+import io.circe.generic.auto._
+import io.circe.syntax._
+import io.circe._
+import org.http4s.circe._
 
 object TodoService {
+  implicit private val todoEncoder = jsonEncoderOf[IO, Seq[Todo]]
+
   val service = HttpRoutes.of[IO] {
-    case GET -> Root / "api" / "todos" => Ok()
+    case GET -> Root / "api" / "todos" => TodoRepository.findAll.flatMap(Ok(_))
   }.orNotFound
 }
