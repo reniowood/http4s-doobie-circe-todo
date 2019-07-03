@@ -15,9 +15,14 @@ import io.circe._
 import org.http4s.circe._
 
 object TodoService {
-  implicit private val todoEncoder = jsonEncoderOf[IO, Seq[Todo]]
+  implicit private val todoEncoder = jsonEncoderOf[IO, Todo]
+  implicit private val todoListEncoder = jsonEncoderOf[IO, Seq[Todo]]
 
   val service = HttpRoutes.of[IO] {
     case GET -> Root / "api" / "todos" => TodoRepository.findAll.flatMap(Ok(_))
+    case GET -> Root / "api" / "todos" / IntVar(id) => TodoRepository.findById(id).flatMap {
+      case Some(todo) => Ok(todo)
+      case None => NotFound()
+    }
   }.orNotFound
 }

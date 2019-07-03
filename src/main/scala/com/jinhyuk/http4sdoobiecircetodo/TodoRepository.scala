@@ -11,4 +11,9 @@ object TodoRepository {
     transactor.use { xa =>
       sql"select id, name, is_done, is_deleted from todo".query[Todo].to[Seq].transact(xa)
     }
+
+  def findById(id: Long): IO[Option[Todo]] =
+    transactor.use { xa =>
+      sql"""select id, name, is_done, is_deleted from todo where id = $id""".query[Todo].option.transact(xa)
+    }
 }
