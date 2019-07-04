@@ -24,6 +24,6 @@ object TodoRepository {
 
   def update(id: Long, todo: TodoRequest): IO[Int] =
     transactor.use { xa =>
-      sql"update todo set name = ${todo.name}, is_deleted = ${todo.isDeleted.getOrElse(false)}, is_done = ${todo.isDone.getOrElse(false)} where id = $id".update.run.transact(xa)
+      sql"update todo set name = ${todo.name}, is_done = ${todo.isDone} where id = $id".update.run.transact(xa)
     }
 }
