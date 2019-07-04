@@ -30,5 +30,7 @@ object TodoService {
       req.as[TodoRequest].flatMap(TodoRepository.add).flatMap(result => Ok())
     case req @ PUT -> Root / "api" / "todos" / IntVar(id) =>
       req.as[TodoRequest].flatMap(TodoRepository.update(id, _)).flatMap(result => if (result > 0) Ok() else NotFound())
+    case req @ DELETE -> Root / "api" / "todos" / IntVar(id) =>
+      TodoRepository.delete(id).flatMap(_ => Ok())
   }.orNotFound
 }

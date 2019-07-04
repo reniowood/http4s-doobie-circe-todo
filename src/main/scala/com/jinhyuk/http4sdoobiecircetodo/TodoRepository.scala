@@ -26,4 +26,9 @@ object TodoRepository {
     transactor.use { xa =>
       sql"update todo set name = ${todo.name}, is_done = ${todo.isDone} where id = $id".update.run.transact(xa)
     }
+
+  def delete(id: Long): IO[Int] =
+    transactor.use { xa =>
+      sql"update todo set is_deleted = true where id = $id".update.run.transact(xa)
+    }
 }
