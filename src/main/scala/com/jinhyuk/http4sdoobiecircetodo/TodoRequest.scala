@@ -3,8 +3,8 @@ package com.jinhyuk.http4sdoobiecircetodo
 import io.circe.generic.extras.ConfiguredJsonCodec
 import io.circe.generic.extras.Configuration
 
-@ConfiguredJsonCodec case class Todo(id: Int, name: String, isDone: Boolean, isDeleted: Boolean)
+@ConfiguredJsonCodec case class TodoRequest(name: String, isDone: Option[Boolean], isDeleted: Option[Boolean])
 
-object Todo {
+object TodoRequest {
   implicit private val config: Configuration = Configuration.default.withSnakeCaseMemberNames
 }

@@ -22,13 +22,15 @@ lazy val root = (project in file("."))
       "mysql"           % "mysql-connector-java" % "8.0.16",
 
       "io.circe"        %% "circe-generic"       % CirceVersion,
+      "io.circe"        %% "circe-generic-extras"% CirceVersion,
 
       "org.specs2"      %% "specs2-core"         % Specs2Version % "test",
 
       "ch.qos.logback"  %  "logback-classic"     % LogbackVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
+    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0"),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )
 
 scalacOptions ++= Seq(

@@ -16,4 +16,9 @@ object TodoRepository {
     transactor.use { xa =>
       sql"""select id, name, is_done, is_deleted from todo where id = $id""".query[Todo].option.transact(xa)
     }
+
+  def add(todo: TodoRequest): IO[Int] =
+    transactor.use { xa =>
+      sql"insert into todo (name) values (${todo.name})".update.run.transact(xa)
+    }
 }
