@@ -9,12 +9,12 @@ import org.http4s.implicits._
 import org.http4s.server.blaze._
 
 object Main extends IOApp {
-  private val services = TodoService.service
+  private val routes = TodoController.routes
 
   def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
       .bindHttp(8080, "0.0.0.0")
-      .withHttpApp(services)
+      .withHttpApp(routes)
       .serve
       .compile
       .drain
