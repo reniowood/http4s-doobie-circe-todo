@@ -1,6 +1,6 @@
 val Http4sVersion = "0.20.3"
 val CirceVersion = "0.11.1"
-val Specs2Version = "4.1.0"
+val ScalatestVersion = "3.0.8"
 val LogbackVersion = "1.2.3"
 val DoobieVersion = "0.7.0"
 
@@ -24,7 +24,8 @@ lazy val root = (project in file("."))
       "io.circe"        %% "circe-generic"       % CirceVersion,
       "io.circe"        %% "circe-generic-extras"% CirceVersion,
 
-      "org.specs2"      %% "specs2-core"         % Specs2Version % "test",
+      "org.scalactic"   %% "scalactic"           % ScalatestVersion, 
+      "org.scalatest"   %% "scalatest"           % ScalatestVersion % "test",
 
       "ch.qos.logback"  %  "logback-classic"     % LogbackVersion
     ),
