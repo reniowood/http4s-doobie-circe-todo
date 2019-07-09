@@ -15,7 +15,7 @@ import io.circe._
 import org.http4s.circe._
 import org.http4s.Request
 
-object TodoController {
+class TodoController(todoService: TodoService) {
   val routes = HttpRoutes.of[IO] {
     case GET -> Root / "api" / "todos" => getTodos
     case GET -> Root / "api" / "todos" / LongVar(id) => getTodo(id)
@@ -26,13 +26,13 @@ object TodoController {
 
   private def getTodos = 
     for {
-      result <- TodoService.getTodos()
+      result <- todoService.getTodos()
       response <- Ok()
     } yield response
 
   private def getTodo(id: Long) = 
     for {
-      result <- TodoService.getTodo(id)
+      result <- todoService.getTodo(id)
       response <- result match {
         case Some(todo) => Ok(todo)
         case None => NotFound()
@@ -42,20 +42,25 @@ object TodoController {
   private def addTodo(req: Request[IO]) =
     for {
       request <- req.as[TodoRequest]
-      _ <- TodoService.addTodo(request)
+      _ <- todoService.addTodo(request)
       response <- Ok()
     } yield response
 
   private def updateTodo(id: Long, req: Request[IO]) =
     for {
       request <- req.as[TodoRequest]
-      result <- TodoService.updateTodo(id, request)
-      response <- if (result > 0) Ok() else NotFound()
+      result <- todoService.updateTodo(id, request)
+      response <- result match {
+        case Right(_) => Ok()
+        case Left(TodoNotFound(_)) => NotFound()
+        case Left(TodoHasPreTodosNotDoneYet(preTodoIds)) => BadRequest(preTodoIds)
+        case _ => InternalServerError()
+      }
     } yield response
 
   private def deleteTodo(id: Long) =
     for {
-      result <- TodoService.deleteTodo(id)
+      result <- todoService.deleteTodo(id)
       response <- Ok()
     } yield response
 }

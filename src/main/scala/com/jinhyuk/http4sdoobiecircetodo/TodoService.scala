@@ -2,15 +2,22 @@ package com.jinhyuk.http4sdoobiecircetodo
 
 import cats.effect._
 import cats.implicits._
+import cats.data.OptionT
+import cats.data.EitherT
 
-object TodoService {
-  def getTodos() = TodoRepository.findAll
+class TodoService(todoRepository: TodoRepository) {
+  def getTodos() = todoRepository.findAll
 
-  def getTodo(id: Long) = TodoRepository.findById(id)
+  def getTodo(id: Long) = todoRepository.findById(id)
 
-  def addTodo(todo: TodoRequest) = TodoRepository.add(todo)
+  def addTodo(todo: TodoRequest) = todoRepository.add(todo)
 
-  def updateTodo(id: Long, todo: TodoRequest) = TodoRepository.update(id, todo)
+  def updateTodo(id: Long, todo: TodoRequest) =
+    EitherT.right[TodoError](todoRepository.findPreTodos(id))
+      .ensure((preTodos: Seq[Todo]) => TodoHasPreTodosNotDoneYet(preTodos.map(_.id)))(_.isEmpty)
+      .semiflatMap(_ => todoRepository.update(id, todo))
+      .ensure(TodoNotFound(id))(_ == 1)
+      .value
 
-  def deleteTodo(id: Long) = TodoRepository.delete(id)
+  def deleteTodo(id: Long) = todoRepository.delete(id)
 }

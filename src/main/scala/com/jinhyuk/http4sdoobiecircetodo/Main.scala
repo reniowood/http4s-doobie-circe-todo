@@ -9,7 +9,11 @@ import org.http4s.implicits._
 import org.http4s.server.blaze._
 
 object Main extends IOApp {
-  private val routes = TodoController.routes
+  private lazy val todoRepository = new TodoRepository(Database.transactor)
+  private lazy val todoService = new TodoService(todoRepository)
+  private lazy val todoController = new TodoController(todoService)
+
+  private lazy val routes = todoController.routes
 
   def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
