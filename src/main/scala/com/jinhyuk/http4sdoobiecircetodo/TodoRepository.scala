@@ -22,14 +22,19 @@ class TodoRepository(transactor: Resource[IO, HikariTransactor[IO]]) {
       sql"""
         select todo.id, todo.name, todo.is_done, todo.is_deleted
         from todo
-        join pre_todo on todo.pre_todo_id = todo.id
-        where pre_todo.todo_id = $id and todo.is_done = true
+        join pre_todo on pre_todo.pre_todo_id = todo.id
+        where pre_todo.todo_id = $id
       """.query[Todo].to[Seq].transact(xa)
     }
 
-  def add(todo: TodoRequest): IO[Int] =
+  def add(todo: TodoRequest): IO[Long] =
     transactor.use { xa =>
-      sql"insert into todo (name) values (${todo.name})".update.run.transact(xa)
+      sql"insert into todo (name, is_done) values (${todo.name}, ${todo.isDone})".update.withUniqueGeneratedKeys[Long]("id").transact(xa)
+    }
+
+  def addPreTodo(id: Long, preTodoId: Long): IO[Int] =
+    transactor.use { xa =>
+      sql"insert into pre_todo (todo_id, pre_todo_id) values ($id, $preTodoId)".update.run.transact(xa)
     }
 
   def update(id: Long, todo: TodoRequest): IO[Int] =

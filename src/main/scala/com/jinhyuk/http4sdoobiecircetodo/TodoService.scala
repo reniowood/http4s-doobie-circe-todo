@@ -12,9 +12,10 @@ class TodoService(todoRepository: TodoRepository) {
 
   def addTodo(todo: TodoRequest) = todoRepository.add(todo)
 
-  def updateTodo(id: Long, todo: TodoRequest) =
+  def updateTodo(id: Long, todo: TodoRequest): IO[Either[TodoError, Int]] =
     EitherT.right[TodoError](todoRepository.findPreTodos(id))
-      .ensure((preTodos: Seq[Todo]) => TodoHasPreTodosNotDoneYet(preTodos.map(_.id)))(_.isEmpty)
+      .map(_.filterNot(_.isDone))
+      .ensureOr((preTodos: Seq[Todo]) => TodoHasPreTodosNotDoneYet(preTodos.map(_.id)))(_.isEmpty)
       .semiflatMap(_ => todoRepository.update(id, todo))
       .ensure(TodoNotFound(id))(_ == 1)
       .value
