@@ -4,10 +4,65 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.FlatSpec
 import cats.effect.IO
 import scala.concurrent.duration._
+import org.scalatest.BeforeAndAfterEach
 
-class TodoServiceSpec extends FlatSpec with MockFactory {
+class TodoServiceSpec extends FlatSpec with MockFactory with BeforeAndAfterEach {
   private val todoRepository: TodoRepository = new TodoRepository(TestDatabase.transactor)
   private val todoService: TodoService = new TodoService(todoRepository)
+
+  override def beforeEach(): Unit = {
+    TestDatabase.truncate.unsafeRunSync
+  }
+
+  override def afterEach(): Unit = {
+    TestDatabase.truncate.unsafeRunSync
+  }
+
+  "getTodo" should "get todo already added" in {
+    // given
+    val todo = TodoRequest(name = "test_todo", isDone = false)
+    val id = todoRepository.add(todo).unsafeRunTimed(1.seconds).get
+
+    // when
+    val result = (for {
+      result <- todoService.getTodo(id)
+    } yield result).unsafeRunTimed(1.seconds).get
+    
+    // then
+    assert(result.isDefined)
+    assert(result.get.name == todo.name)
+    assert(result.get.isDone == todo.isDone)
+  }
+
+  it should "return None if there is no todo with given id" in {
+    // given
+    val id = 3L
+
+    // when
+    val result = (for {
+      result <- todoService.getTodo(id)
+    } yield result).unsafeRunTimed(1.seconds).get
+
+    // then
+    assert(result.isEmpty)
+  }
+
+  "addTodo" should "add todo" in {
+    // given
+    val todo = TodoRequest(name = "test_todo", isDone = false)
+
+    // when
+    val added = (for {
+      id <- todoService.addTodo(todo)
+      added <- todoRepository.findById(id)
+    } yield added).unsafeRunTimed(1.seconds).get
+    
+    // then
+    assert(added.isDefined)
+    assert(added.get.name == todo.name)
+    assert(added.get.isDone == todo.isDone)
+    assert(!added.get.isDeleted)
+  }
 
   "updateTodo" should "update todo done if there is no pre todo" in {
     // given
@@ -85,5 +140,36 @@ class TodoServiceSpec extends FlatSpec with MockFactory {
 
     assert(updated.isDefined)
     assert(!updated.get.isDone)
+  }
+
+  "deleteTodo" should "set todo as deleted" in {
+    // given
+    val todo = TodoRequest(name = "test_todo", isDone = false)
+    val id = todoRepository.add(todo).unsafeRunTimed(1.seconds).get
+    
+    // when
+    val (result, updated) = (for {
+      result <- todoService.deleteTodo(id)
+      updated <- todoRepository.findById(id)
+    } yield (result, updated)).unsafeRunTimed(1.seconds).get
+
+    // then
+    assert(result == 1)
+
+    assert(updated.isDefined)
+    assert(updated.get.isDeleted)
+  }
+
+  it should "return 0 if there is no todo with given id" in {
+    // given
+    val id = 3L
+
+    // when
+    val result = (for {
+      result <- todoService.deleteTodo(id)
+    } yield result).unsafeRunTimed(1.seconds).get
+
+    // then
+    assert(result == 0)
   }
 }

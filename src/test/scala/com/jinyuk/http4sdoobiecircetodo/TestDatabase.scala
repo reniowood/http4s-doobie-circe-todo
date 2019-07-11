@@ -1,4 +1,7 @@
 package com.jinhyuk.http4sdoobiecircetodo
+
+import doobie._
+import doobie.implicits._
 import cats.effect.Resource
 import doobie.hikari.HikariTransactor
 import cats.effect.IO
@@ -20,4 +23,10 @@ object TestDatabase {
           transactEC = te
         )
     } yield xa
+
+    def truncate = {
+      transactor.use { xa =>
+        sql"truncate table todo".update.run.transact(xa)
+      }
+    }
 }
